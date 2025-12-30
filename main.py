@@ -1,10 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from database import create_db_and_tables
-from routers import posts, auth # 导入我们的子路由模块
+from routers import posts, auth, upload, category # 导入我们的子路由模块
 
 # 初始化 App
 app = FastAPI()
+
+app.mount("/static",StaticFiles(directory="static"),name="static")
 
 # 配置 CORS (和之前一样)
 app.add_middleware(
@@ -23,6 +26,8 @@ def on_startup():
 
 app.include_router(posts.router, prefix="/posts", tags=["posts"])
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(category.router, prefix="/category", tags=["categories"])
+app.include_router(upload.router, tags=["upload"])
 
 @app.get("/")
 def read_root():

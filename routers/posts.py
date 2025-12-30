@@ -1,4 +1,5 @@
-from typing import List
+from datetime import datetime
+from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
@@ -52,8 +53,20 @@ def create_post(post: PostCreate, session: Session = Depends(get_session),curren
     return db_post
 
 @router.get("/", response_model = List[PostRead])
-def read_posts(session: Session = Depends(get_session)):
-    posts = session.exec(select(Post)).all()
+def read_posts(
+    session: Session = Depends(get_session),
+    category_id: Optional[int] = None,
+    offset: int =0,
+    limit: int = 10
+
+):
+    # posts = session.exec(select(Post)).all()
+    # return posts
+    query = select(Post)
+    if category_id:
+        query = query.where(Post.category_id == category_id)
+    query = query.order_by(Post.created_at.desc()).offset(offset).limit(limit)
+    posts = session.exec(query).all()
     return posts
 
 
@@ -74,6 +87,7 @@ def update_post(post_id: int, post_data: PostUpdate, session: Session = Depends(
     update_data = post_data.model_dump(exclude_unset=True)
 
     db_post.sqlmodel_update(update_data)
+    db_post.updated_at = datetime.utcnow()
 
     session.add(db_post)
     session.commit()
@@ -90,3 +104,6 @@ def delete_post(post_id: int, session: Session = Depends(get_session),current_us
     session.delete(db_post)
     session.commit()
     return {"ok": True}
+
+
+#创建分类
