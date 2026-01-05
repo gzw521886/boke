@@ -20,7 +20,10 @@ def verify_password(plain_password, hashed_password):
 
 def get_password_hash(password):
     """把明文密码加密成哈希值"""
-    return pwd_context.hash(password)
+    # bcrypt 限制密码最多 72 字节，超过部分会被忽略
+    # 为了安全，我们手动截断密码
+    password_bytes = password.encode('utf-8')[:72]
+    return pwd_context.hash(password_bytes.decode('utf-8', errors='ignore'))
 
 # 3. Token 生成工具
 def create_access_token(data: dict):
